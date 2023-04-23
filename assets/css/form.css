@@ -43,7 +43,6 @@ body {
 
 input,
 .submit-btn {
-    opacity: 0;
     width: 80%;
     height: 35px;
     display: block;

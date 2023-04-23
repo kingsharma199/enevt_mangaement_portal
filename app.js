@@ -15,18 +15,32 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app)
 const auth = getAuth()
-
+let registrationNumber;
+const navElement = document.getElementById('navbar')
 
 
 document.addEventListener("DOMContentLoaded", async() => {
     console.log("DOM LOADED");
-
-    if (sessionStorage.getItem('userLoggedIn')) {
-        console.log("User Logged In");
+    const userStatus = sessionStorage.getItem("userLoggedIn")
+    if (userStatus === 'true') {
+        console.log("User is logged In");
+        registrationNumber = sessionStorage.getItem("registrationNumber")
+        const docRef = doc(db, "users", registrationNumber);
+        const docSnap = await getDoc(docRef);
+        const userData = docSnap.data()
+        if (userData.role === 'admin') {
+            console.log("user is Admin");
+            navElement.removeChild(navElement.lastElementChild)
+            navElement.innerHTML += `<li class="scroll-to-section"><a href="/add-event.html" class="active">Add Event</a></li>`
+            navElement.innerHTML += `<button class="logout" id="signoutbutton">Log Out</button>`
+        } else {
+            console.log("User is Not ADMIN");
+            navElement.removeChild(navElement.lastElementChild)
+            navElement.innerHTML += `<button class="logout" id="signoutbutton">Log Out</button>`
+        }
     } else {
-        console.log("User not Logged In");
+        console.log("user is not logged in")
     }
-
     const eventSnapshot = await getDocs(collection(db, "events"));
     eventSnapshot.forEach((doc) => {
         const eventOutsideBox = document.getElementById("meeting-card-box")
@@ -53,6 +67,11 @@ document.addEventListener("DOMContentLoaded", async() => {
     `
         eventOutsideBox.innerHTML += codeBlock
     });
+
+    document.getElementById('signoutbutton').addEventListener('click', async() => {
+        sessionStorage.clear()
+        window.location.reload()
+    });
 })
 
 document.getElementById('signinbutton').addEventListener('click', () => {
@@ -62,17 +81,16 @@ document.getElementById('signinbutton').addEventListener('click', () => {
             let email = user.user.email
             const permissible = email.split("@")
             if (permissible[1] === 'poornima.org') {
-                console.log("user is from Poornima");
+                // USER IS FROM POORNIMA
                 const identifier = email.slice(0, 2);
                 const name = user.user.displayName
                 const photoURL = user.user.photoURL
                 if (identifier === "20") {
-                    console.log("user is student");
+                    // USER IS STUDENT
                     const role = "student"
                     const year = email.slice(0, 4)
                     const branch = email.slice(8, 10)
                     const checker = email.split("@")[0].slice(-3, -2)
-                    let registrationNumber
                     if (isNaN(parseInt(checker)) === true) {
                         const regst = email.split("@")[0].slice(-2)
                         registrationNumber = `PIET${year.slice(2, 4)}${branch.toUpperCase()}0${regst}`
@@ -84,11 +102,13 @@ document.getElementById('signinbutton').addEventListener('click', () => {
                     const docRef = doc(db, "users", registrationNumber);
                     const docSnap = await getDoc(docRef);
                     if (docSnap.exists()) {
+                        // EXISTING USER LOGGED IN
                         sessionStorage.setItem("userLoggedIn", true);
                         sessionStorage.setItem("registrationNumber", registrationNumber);
-                        console.log("Existing User Logged In");
+                        navElement.removeChild(navElement.lastElementChild)
+                        navElement.innerHTML += `<button class="logout" id="signoutbutton">Log Out</button>`
                     } else {
-                        console.log("New User Detected.");
+                        // NEW USER CREATED
                         const userData = {
                             "name": name,
                             "email": email,
@@ -99,20 +119,23 @@ document.getElementById('signinbutton').addEventListener('click', () => {
                             "role": role
                         }
                         await setDoc(doc(db, "users", registrationNumber), userData);
-                        console.log("user created successfully");
+                        // NEW USER LOGGED IN
                         sessionStorage.setItem("userLoggedIn", true);
                         sessionStorage.setItem("registrationNumber", registrationNumber);
-                        console.log("Session for new user started");
+                        navElement.removeChild(navElement.lastElementChild)
+                        navElement.innerHTML += `<button class="logout" id="signoutbutton">Log Out</button>`
                     }
                 } else {
                     const role = "faculty"
                     console.log("user is faculty");
                 }
             } else {
-                console.log("Access Denied");
+                // USER IS NOT FROM POORNIMA
+                alert("This portal is only for POORNIMA students")
             }
         })
         .catch((err) => {
+            alert("Login Failed with error " + err)
             console.log(err);
         })
 })

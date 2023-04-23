@@ -32,11 +32,11 @@ document.addEventListener("DOMContentLoaded", async() => {
             console.log("user is Admin");
             navElement.removeChild(navElement.lastElementChild)
             navElement.innerHTML += `<li class="scroll-to-section"><a href="/add-event.html" class="active">Add Event</a></li>`
-            navElement.innerHTML += `<button class="logout" id="signoutbutton">Log Out</button>`
+            navElement.innerHTML += `<li class="scroll-to-section"><button class="logout btn btn-danger" id="signoutbutton">Log Out</button></li>`
         } else {
             console.log("User is Not ADMIN");
             navElement.removeChild(navElement.lastElementChild)
-            navElement.innerHTML += `<button class="logout" id="signoutbutton">Log Out</button>`
+            navElement.innerHTML += `<li class="scroll-to-section"><button class="logout btn btn-danger" id="signoutbutton">Log Out</button></li>`
         }
     } else {
         console.log("user is not logged in")
@@ -106,7 +106,7 @@ document.getElementById('signinbutton').addEventListener('click', () => {
                         sessionStorage.setItem("userLoggedIn", true);
                         sessionStorage.setItem("registrationNumber", registrationNumber);
                         navElement.removeChild(navElement.lastElementChild)
-                        navElement.innerHTML += `<button class="logout" id="signoutbutton">Log Out</button>`
+                        navElement.innerHTML += `<li class="scroll-to-section"><button class="logout btn btn-danger" id="signoutbutton">Log Out</button></li>`
                     } else {
                         // NEW USER CREATED
                         const userData = {
@@ -123,7 +123,7 @@ document.getElementById('signinbutton').addEventListener('click', () => {
                         sessionStorage.setItem("userLoggedIn", true);
                         sessionStorage.setItem("registrationNumber", registrationNumber);
                         navElement.removeChild(navElement.lastElementChild)
-                        navElement.innerHTML += `<button class="logout" id="signoutbutton">Log Out</button>`
+                        navElement.innerHTML += `<li class="scroll-to-section"><button class="logout btn btn-danger" id="signoutbutton">Log Out</button></li>`
                     }
                 } else {
                     const role = "faculty"

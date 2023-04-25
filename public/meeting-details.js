@@ -1,4 +1,4 @@
-import { getFirestore, collection, updateDoc, doc, getDocs, arrayUnion, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
+import { getFirestore, collection, updateDoc, doc, getDocs, arrayUnion, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js";
 
 const firebaseConfig = {
@@ -13,7 +13,14 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app)
 
 let eventData;
+const registerBtn = document.getElementById("register")
 let eventId;
+let participants;
+let createdBy;
+const userStatus = sessionStorage.getItem("userLoggedIn")
+const registrationNumber = sessionStorage.getItem("registrationNumber")
+let confirmbtn;
+
 
 document.addEventListener("DOMContentLoaded", async() => {
     const params = new Proxy(new URLSearchParams(window.location.search), {
@@ -26,6 +33,8 @@ document.addEventListener("DOMContentLoaded", async() => {
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
         eventData = docSnap.data()
+        participants = eventData.participants
+        createdBy = eventData.createdBy
         headerTitle.innerText = eventData.name
         document.getElementById("date").innerHTML = `<h6>${eventData.dateMonth}<span>${eventData.dateDate}</span></h6>`
         document.getElementById("event-name").innerText = eventData.name
@@ -35,26 +44,68 @@ document.addEventListener("DOMContentLoaded", async() => {
             document.getElementById('hours').innerHTML += `<p>${hour.dayFrom} - ${hour.dayTo}: ${hour.timeFrom} - ${hour.timeTo}<br></p>`
         })
         document.getElementById("event-location").innerText = eventData.location
+        if (createdBy === registrationNumber) {
+            document.getElementById('cta').innerHTML = `<h5>Edit This Event</h5>
+            <button class="btn btn-danger w-50" id="delete">Delete</button><br>
+            <button class="btn btn-warning w-50 text-light" id="view">View Participants</button>`
+            document.getElementById('delete').addEventListener('click', async() => {
+                confirmbtn = confirm("Are you sure you want to delete the event?")
+                if (confirmbtn) {
+                    await deleteDoc(doc(db, "events", eventId));
+                    openModal()
+                    document.getElementById("modal-body").innerHTML = `<h1 class='text-danger'>Event has been deleted</h1>`
+                    window.location = '/'
+                } else {
+                    console.log("Delete Request denied");
+                }
+            })
+            document.getElementById('view').addEventListener('click', async() => {
+                openModal()
+                document.getElementById("modal-body").innerHTML = ``
+                participants.forEach((participant) => {
+                    document.getElementById("modal-body").innerHTML += `<p class='text-dark'>• ${participant}</p>`
+                })
+
+            })
+        } else {
+            if (participants.includes(registrationNumber)) {
+                registerBtn.disabled = true;
+                registerBtn.classList.remove('btn-success')
+                registerBtn.classList.add('btn-secondary')
+                registerBtn.innerText = "Registered!"
+            }
+        }
     }
 })
 
-document.getElementById("register").addEventListener('click', async() => {
-    const userStatus = sessionStorage.getItem("userLoggedIn")
+registerBtn.addEventListener('click', async() => {
     if (userStatus === 'true') {
-        const registrationNumber = sessionStorage.getItem("registrationNumber")
+        console.log(registrationNumber);
         const userRef = doc(db, "users", registrationNumber);
         const userSnap = await getDoc(userRef)
         const userData = userSnap.data()
+        openModal()
         if (userData.role === 'student') {
             const eventRef = doc(db, "events", eventId)
             await updateDoc(eventRef, {
                 participants: arrayUnion(registrationNumber)
             })
+            document.getElementById("modal-body").innerHTML = `<h1 class='text-success'>You Have been Registered Successfully</h1>`
         } else if (userData.role === 'faculty') {
-            alert("Faculty cannot register for the event");
+            document.getElementById("modal-body").innerHTML = `<h1 class='text-danger'>Faculty cannot register for the event</h1>`
+                // window.location.reload()
         }
     } else {
         alert("You Need to log in to register for this event")
         window.location = '/'
     }
+})
+
+function openModal() {
+    var myModal = new bootstrap.Modal(document.getElementById('spinnerModal'), { keyboard: false });
+    myModal.show();
+}
+
+document.getElementById("modal-close").addEventListener('click', () => {
+    window.location.reload()
 })

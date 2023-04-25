@@ -44,6 +44,7 @@ document.addEventListener("DOMContentLoaded", async() => {
     const eventsRef = collection(db, "events");
     const q = query(eventsRef, orderBy("fulltime", "desc"), limit(4));
     const eventSnapshot = await getDocs(q);
+    document.getElementById("loading").remove()
     eventSnapshot.forEach((doc) => {
         const eventOutsideBox = document.getElementById("meeting-card-box")
         const eventData = doc.data()
@@ -82,85 +83,85 @@ document.getElementById('signinbutton').addEventListener('click', () => {
         .then(async(user) => {
             let email = user.user.email
             const permissible = email.split("@")
-                // if (permissible[1] === 'poornima.org') {
+            if (permissible[1] === 'poornima.org') {
                 // USER IS FROM POORNIMA
-            const identifier = email.slice(0, 2);
-            const name = user.user.displayName
-            const photoURL = user.user.photoURL
-            if (identifier === "20") {
-                // USER IS STUDENT
-                const role = "student"
-                const year = email.slice(0, 4)
-                const branch = email.slice(8, 10)
-                const checker = email.split("@")[0].slice(-3, -2)
-                if (isNaN(parseInt(checker)) === true) {
-                    const regst = email.split("@")[0].slice(-2)
-                    registrationNumber = `PIET${year.slice(2, 4)}${branch.toUpperCase()}0${regst}`
-                } else {
-                    const regst = email.split("@")[0].slice(-3)
-                    registrationNumber = `PIET${year.slice(2, 4)}${branch.toUpperCase()}${regst}`
-                }
-                console.log(registrationNumber);
-                const docRef = doc(db, "users", registrationNumber);
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    // EXISTING USER LOGGED IN
-                    sessionStorage.setItem("userLoggedIn", true);
-                    sessionStorage.setItem("registrationNumber", registrationNumber);
-                    navElement.removeChild(navElement.lastElementChild)
-                    navElement.innerHTML += `<li class="scroll-to-section"><button class="logout btn btn-danger" id="signoutbutton">Log Out</button></li>`
-                } else {
-                    // NEW USER CREATED
-                    const userData = {
-                        "name": name,
-                        "email": email,
-                        "photoURL": photoURL,
-                        "branch": branch,
-                        "year": year,
-                        "registrationNumber": registrationNumber,
-                        "role": role
+                const identifier = email.slice(0, 2);
+                const name = user.user.displayName
+                const photoURL = user.user.photoURL
+                if (identifier === "20") {
+                    // USER IS STUDENT
+                    const role = "student"
+                    const year = email.slice(0, 4)
+                    const branch = email.slice(8, 10)
+                    const checker = email.split("@")[0].slice(-3, -2)
+                    if (isNaN(parseInt(checker)) === true) {
+                        const regst = email.split("@")[0].slice(-2)
+                        registrationNumber = `PIET${year.slice(2, 4)}${branch.toUpperCase()}0${regst}`
+                    } else {
+                        const regst = email.split("@")[0].slice(-3)
+                        registrationNumber = `PIET${year.slice(2, 4)}${branch.toUpperCase()}${regst}`
                     }
-                    await setDoc(doc(db, "users", registrationNumber), userData);
-                    // NEW USER LOGGED IN
-                    sessionStorage.setItem("userLoggedIn", true);
-                    sessionStorage.setItem("registrationNumber", registrationNumber);
-                    navElement.removeChild(navElement.lastElementChild)
-                    navElement.innerHTML += `<li class="scroll-to-section"><button class="logout btn btn-danger" id="signoutbutton">Log Out</button></li>`
+                    console.log(registrationNumber);
+                    const docRef = doc(db, "users", registrationNumber);
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        // EXISTING USER LOGGED IN
+                        sessionStorage.setItem("userLoggedIn", true);
+                        sessionStorage.setItem("registrationNumber", registrationNumber);
+                        navElement.removeChild(navElement.lastElementChild)
+                        navElement.innerHTML += `<li class="scroll-to-section"><button class="logout btn btn-danger" id="signoutbutton">Log Out</button></li>`
+                    } else {
+                        // NEW USER CREATED
+                        const userData = {
+                            "name": name,
+                            "email": email,
+                            "photoURL": photoURL,
+                            "branch": branch,
+                            "year": year,
+                            "registrationNumber": registrationNumber,
+                            "role": role
+                        }
+                        await setDoc(doc(db, "users", registrationNumber), userData);
+                        // NEW USER LOGGED IN
+                        sessionStorage.setItem("userLoggedIn", true);
+                        sessionStorage.setItem("registrationNumber", registrationNumber);
+                        navElement.removeChild(navElement.lastElementChild)
+                        navElement.innerHTML += `<li class="scroll-to-section"><button class="logout btn btn-danger" id="signoutbutton">Log Out</button></li>`
+                    }
+                } else {
+                    const docIdentifier = user.user.email.split("@")[0]
+                    const docRef = doc(db, "users", docIdentifier);
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        // EXISTING USER LOGGED IN
+                        console.log("User exists. Logging in Existing user");
+                        sessionStorage.setItem("userLoggedIn", true);
+                        sessionStorage.setItem("registrationNumber", docIdentifier);
+                        navElement.removeChild(navElement.lastElementChild)
+                        navElement.innerHTML += `<li class="scroll-to-section"><button class="logout btn btn-danger" id="signoutbutton">Log Out</button></li>`
+                    } else {
+                        console.log("User Does not exists");
+                        const role = "faculty"
+                        const userData = {
+                            "name": name,
+                            "email": email,
+                            "photoURL": photoURL,
+                            "role": role
+                        }
+                        await setDoc(doc(db, "users", docIdentifier), userData);
+                        console.log("New User Created");
+                        sessionStorage.setItem("userLoggedIn", true);
+                        sessionStorage.setItem("registrationNumber", docIdentifier);
+                        navElement.removeChild(navElement.lastElementChild)
+                        navElement.innerHTML += `<li class="scroll-to-section"><button class="logout btn btn-danger" id="signoutbutton">Log Out</button></li>`
+                    }
+                    console.log("user is faculty");
+
                 }
             } else {
-                const docIdentifier = user.user.email.split("@")[0]
-                const docRef = doc(db, "users", docIdentifier);
-                const docSnap = await getDoc(docRef);
-                if (docSnap.exists()) {
-                    // EXISTING USER LOGGED IN
-                    console.log("User exists. Logging in Existing user");
-                    sessionStorage.setItem("userLoggedIn", true);
-                    sessionStorage.setItem("registrationNumber", docIdentifier);
-                    navElement.removeChild(navElement.lastElementChild)
-                    navElement.innerHTML += `<li class="scroll-to-section"><button class="logout btn btn-danger" id="signoutbutton">Log Out</button></li>`
-                } else {
-                    console.log("User Does not exists");
-                    const role = "faculty"
-                    const userData = {
-                        "name": name,
-                        "email": email,
-                        "photoURL": photoURL,
-                        "role": role
-                    }
-                    await setDoc(doc(db, "users", docIdentifier), userData);
-                    console.log("New User Created");
-                    sessionStorage.setItem("userLoggedIn", true);
-                    sessionStorage.setItem("registrationNumber", docIdentifier);
-                    navElement.removeChild(navElement.lastElementChild)
-                    navElement.innerHTML += `<li class="scroll-to-section"><button class="logout btn btn-danger" id="signoutbutton">Log Out</button></li>`
-                }
-                console.log("user is faculty");
-
+                // USER IS NOT FROM POORNIMA
+                alert("This portal is only for POORNIMA students")
             }
-            // } else {
-            //     // USER IS NOT FROM POORNIMA
-            //     alert("This portal is only for POORNIMA students")
-            // }
         })
         .catch((err) => {
             alert("Login Failed with error " + err)

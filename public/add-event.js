@@ -17,6 +17,39 @@ const db = getFirestore(app)
 const storage = getStorage(app)
 const imagesRef = ref(storage, "images")
 let uploadedImageURL;
+const userStatus = sessionStorage.getItem("userLoggedIn")
+const registrationNumber = sessionStorage.getItem("registrationNumber")
+let newTime, dateMonth, dateDate
+const mapToMonth = {
+    0: "Jan",
+    1: "Feb",
+    2: "Mar",
+    3: "Apr",
+    4: "May",
+    5: "Jun",
+    6: "Jul",
+    7: "Aug",
+    8: "Sep",
+    9: "Oct",
+    10: "Nov",
+    11: "Dec"
+}
+
+
+document.addEventListener("DOMContentLoaded", async() => {
+    if (userStatus === 'true') {
+        console.log(registrationNumber);
+        const userRef = doc(db, "users", registrationNumber);
+        const userSnap = await getDoc(userRef)
+        const userData = userSnap.data()
+
+        if (userData.role != 'admin') {
+            window.location = '/public/not-allowed.html'
+        } else {
+            document.getElementById("loading").remove()
+        }
+    }
+})
 
 document.getElementById("header-img-upload").addEventListener("click", (event) => {
     event.preventDefault()
@@ -31,8 +64,15 @@ document.getElementById("header-img-upload").addEventListener("click", (event) =
                 .then((url) => {
                     document.getElementById('header-img-display').setAttribute('src', url)
                     uploadedImageURL = url;
+                    document.getElementById("submit-event").disabled = false
                 })
         });
+})
+
+document.getElementById('dateTime').addEventListener('change', async() => {
+    newTime = new Date(document.getElementById('dateTime').value)
+    dateMonth = mapToMonth[newTime.getMonth()]
+    dateDate = newTime.getDate()
 })
 
 document.getElementById("submit-event").addEventListener('click', async(event) => {
@@ -41,26 +81,12 @@ document.getElementById("submit-event").addEventListener('click', async(event) =
     const eventName = document.getElementById('event-name').value;
     const eventDescription = document.getElementById('event-description').value;
     const eventLocation = document.getElementById('event-location').value;
-    const dateMonth = document.getElementById('month').value;
-    const dateDate = document.getElementById('date').value;
     const dayFrom = document.getElementById('dayFrom').value;
     const dayTo = document.getElementById('dayTo').value;
     const timeFrom = document.getElementById('timeFrom').value;
     const timeTo = document.getElementById('timeTo').value;
     const eventPhoto = uploadedImageURL
 
-    console.log({
-        eventName,
-        eventDescription,
-        eventLocation,
-        dateMonth,
-        dateDate,
-        dayFrom,
-        dayTo,
-        timeFrom,
-        timeTo,
-        eventPhoto
-    });
     const docRef = await addDoc(collection(db, "events"), {
         'name': eventName,
         'description': eventDescription,
@@ -74,7 +100,9 @@ document.getElementById("submit-event").addEventListener('click', async(event) =
             'timeTo': timeTo
         }],
         'image': eventPhoto,
-        'participants': []
+        'participants': [],
+        'createdBy': registrationNumber,
+        'fulltime': newTime
     })
     alert("New Event Added")
     window.location(`/meeting-details?id=${docRef.id}`)

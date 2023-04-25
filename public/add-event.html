@@ -16,6 +16,13 @@
 </head>
 
 <body style="display: flex; flex-direction: column; background-color: #1c1c1c;">
+    <div id="loading" style="width: 100vw; height: 100vh;" class="d-flex flex-column bg-dark align-items-center justify-content-center">
+        <div class="d-flex justify-content-center">
+            <div class="spinner-grow text-success" style="width: 10rem; height: 10rem;" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>
     <header class="header-area header-sticky">
         <div class="container">
             <div class="row">
@@ -80,7 +87,7 @@
                             </div>
                             <hr>
                             <p>Event Happening Details</p>
-                            <div class="form-check col-4">
+                            <!-- <div class="form-check col-4">
                                 <select name="month" id="month">
                                         <option value="None">Select Month</option>
                                         <option value="Jan">January</option>
@@ -132,6 +139,11 @@
                                         <option value="30">30</option>
                                         <option value="31">31</option>
                                     </select>
+                            </div> -->
+                            <div class="form-group col-6">
+                                <label for="dateTime">Event Time To</label>
+                                <input type="datetime-local" class="form-control" id="dateTime" aria-describedby="eventDateTimeHelp" placeholder="Enter Event Time To">
+                                <small id="eventDateTimeHelp" class="form-text text-muted">This is the ending time of the event</small>
                             </div>
                             <hr>
                             <p>Days and Hours</p>
@@ -176,7 +188,7 @@
                                 <button class="btn btn-success" id="header-img-upload">Upload</button>
                             </div>
                             <img src="" alt="" id="header-img-display">
-                            <button class="btn btn-primary" id="submit-event">Submit</button>
+                            <button class="btn btn-primary" id="submit-event" disabled>Submit</button>
                         </div>
                     </div>
                 </div>

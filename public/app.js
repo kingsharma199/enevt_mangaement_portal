@@ -1,4 +1,4 @@
-import { getFirestore, collection, doc, getDocs, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
+import { getFirestore, collection, doc, getDocs, getDoc, setDoc, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/9.20.0/firebase-auth.js";
 
@@ -41,7 +41,9 @@ document.addEventListener("DOMContentLoaded", async() => {
     } else {
         console.log("user is not logged in")
     }
-    const eventSnapshot = await getDocs(collection(db, "events"));
+    const eventsRef = collection(db, "events");
+    const q = query(eventsRef, orderBy("fulltime", "desc"), limit(4));
+    const eventSnapshot = await getDocs(q);
     eventSnapshot.forEach((doc) => {
         const eventOutsideBox = document.getElementById("meeting-card-box")
         const eventData = doc.data()
@@ -126,8 +128,34 @@ document.getElementById('signinbutton').addEventListener('click', () => {
                         navElement.innerHTML += `<li class="scroll-to-section"><button class="logout btn btn-danger" id="signoutbutton">Log Out</button></li>`
                     }
                 } else {
-                    const role = "faculty"
+                    const docIdentifier = user.user.email.split("@")[0]
+                    const docRef = doc(db, "users", docIdentifier);
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        // EXISTING USER LOGGED IN
+                        console.log("User exists. Logging in Existing user");
+                        sessionStorage.setItem("userLoggedIn", true);
+                        sessionStorage.setItem("registrationNumber", registrationNumber);
+                        navElement.removeChild(navElement.lastElementChild)
+                        navElement.innerHTML += `<li class="scroll-to-section"><button class="logout btn btn-danger" id="signoutbutton">Log Out</button></li>`
+                    } else {
+                        console.log("User Does not exists");
+                        const role = "faculty"
+                        const userData = {
+                            "name": name,
+                            "email": email,
+                            "photoURL": photoURL,
+                            "role": role
+                        }
+                        await setDoc(doc(db, "users", docIdentifier), userData);
+                        console.log("New User Created");
+                        sessionStorage.setItem("userLoggedIn", true);
+                        sessionStorage.setItem("registrationNumber", docIdentifier);
+                        navElement.removeChild(navElement.lastElementChild)
+                        navElement.innerHTML += `<li class="scroll-to-section"><button class="logout btn btn-danger" id="signoutbutton">Log Out</button></li>`
+                    }
                     console.log("user is faculty");
+
                 }
             } else {
                 // USER IS NOT FROM POORNIMA

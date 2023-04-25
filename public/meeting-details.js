@@ -33,6 +33,7 @@ document.addEventListener("DOMContentLoaded", async() => {
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
         eventData = docSnap.data()
+        document.getElementById("loading").remove()
         participants = eventData.participants
         createdBy = eventData.createdBy
         headerTitle.innerText = eventData.name
